@@ -6,6 +6,15 @@ import zoneinfo
 
 from colorama import Back, Fore, Style
 
+levelname_emoji = {
+    "DEBUG": "🫐",
+    # "DEBUG": "🔎",
+    "INFO": "🍏",
+    "WARNING": "🍋",
+    "ERROR": "🍒",
+    "CRITICAL": "🌶️",
+}
+
 levelname_bg = {
     "DEBUG": Back.BLUE,
     "INFO": Back.GREEN,
@@ -79,6 +88,7 @@ class ColoredIsoDatetimeFormatter(IsoDatetimeFormatter):
     def format(self, record: logging.LogRecord):
         arrow = "\uE0B0"
         level_bg = levelname_bg.get(record.levelname, Back.BLACK)
+        level_emoji = levelname_emoji.get(record.levelname, "")
         msg_fg = message_fg.get(record.levelname, Fore.WHITE)
 
         ts = self.formatTime(record)
@@ -87,7 +97,7 @@ class ColoredIsoDatetimeFormatter(IsoDatetimeFormatter):
             + f"{level_bg}{Fore.WHITE}{arrow}{Style.RESET_ALL}"
         )
         level_colored = (
-            f"{level_bg} {record.levelname:8s} {Style.RESET_ALL}"
+            f"{level_bg} {level_emoji} {record.levelname:8s} {Style.RESET_ALL}"
             + f"{Back.CYAN}{bg2fg[level_bg]}{arrow}{Style.RESET_ALL}"
         )
         name_colored = (
@@ -101,39 +111,6 @@ class ColoredIsoDatetimeFormatter(IsoDatetimeFormatter):
         # Output the log line
         log_line = f"{time_colored}{level_colored}{name_colored}{message_colored}"
         return log_line
-
-
-def bullet_train_style_prompt():
-    # Directory section
-    directory = Style.BRIGHT + Back.BLUE + Fore.WHITE + " ~/Documents "
-    directory_arrow_separator = Style.RESET_ALL + Back.GREEN + Fore.BLUE + "\uE0B0"
-
-    # Git status section
-    git_status = Style.RESET_ALL + Back.GREEN + Fore.BLACK + " main ✔ "
-    git_status_arrow_separator = Style.RESET_ALL + Back.YELLOW + Fore.GREEN + "\uE0B0"
-    # Python version section
-    python_section = Style.RESET_ALL + Back.YELLOW + Fore.BLACK + " 🐍 3.9.0 "
-    python_section_arrow_separator = (
-        Style.RESET_ALL + Back.WHITE + Fore.YELLOW + "\uE0B0"
-    )
-
-    # Time section
-    time_section = Style.RESET_ALL + Back.WHITE + Fore.BLACK + " ⌚ 14:00 "
-    time_section_arrow_separator = Style.RESET_ALL + Fore.WHITE + "\uE0B0"
-
-    # Print the prompt
-    print(
-        directory
-        + directory_arrow_separator
-        + git_status
-        + git_status_arrow_separator
-        + python_section
-        + python_section_arrow_separator
-        + time_section
-        + time_section_arrow_separator
-        + Style.RESET_ALL
-    )
-    print(Fore.CYAN + "➜ ", end="")
 
 
 def set_logger(
@@ -155,13 +132,13 @@ def set_logger(
 
     # Add the handler to the logger
     logger.addHandler(handler)
+    logger.setLevel(level)
 
     return logger
 
 
 if __name__ == "__main__":
     logger = set_logger("sdk")
-    logger.setLevel(logging.DEBUG)
     logger.debug("debug message")
     logger.info("info message")
     logger.warning("warning message")
