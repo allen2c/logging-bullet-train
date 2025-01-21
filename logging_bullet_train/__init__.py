@@ -8,36 +8,36 @@ import tzlocal
 from colorama import Back, Fore, Style
 
 level_emoji_default = {
-    "DEBUG": "🔎",
-    "INFO": "💡",
-    "WARNING": "⭐",
-    "ERROR": "🚨",
-    "CRITICAL": "🔥",
-    "NOTSET": "🔘",
+    logging.DEBUG: "🔎",
+    logging.INFO: "💡",
+    logging.WARNING: "⭐",
+    logging.ERROR: "🚨",
+    logging.CRITICAL: "🔥",
+    logging.NOTSET: "🔘",
 }
 level_emoji_fruit = {
-    "DEBUG": "🫐",
-    "INFO": "🍏",
-    "WARNING": "🍋",
-    "ERROR": "🍒",
-    "CRITICAL": "🌶️",
-    "NOTSET": "🍇",
+    logging.DEBUG: "🫐",
+    logging.INFO: "🍏",
+    logging.WARNING: "🍋",
+    logging.ERROR: "🍒",
+    logging.CRITICAL: "🌶️",
+    logging.NOTSET: "🍇",
 }
 level_emoji_weather = {
-    "DEBUG": "🌤️",
-    "INFO": "☀️",
-    "WARNING": "🌦️",
-    "ERROR": "⛈️",
-    "CRITICAL": "🌪️",
-    "NOTSET": "🌈",
+    logging.DEBUG: "🌤️",
+    logging.INFO: "☀️",
+    logging.WARNING: "🌦️",
+    logging.ERROR: "⛈️",
+    logging.CRITICAL: "🌪️",
+    logging.NOTSET: "🌈",
 }
 level_emoji_night = {
-    "DEBUG": "🌑",
-    "INFO": "🌓",
-    "WARNING": "🌕",
-    "ERROR": "🌠",
-    "CRITICAL": "☄️",
-    "NOTSET": "🌌",
+    logging.DEBUG: "🌑",
+    logging.INFO: "🌓",
+    logging.WARNING: "🌕",
+    logging.ERROR: "🌠",
+    logging.CRITICAL: "☄️",
+    logging.NOTSET: "🌌",
 }
 level_emojis = {
     "default": level_emoji_default,
@@ -50,36 +50,70 @@ level_emojis = {
 type BACK_ARROW = typing.Tuple[typing.Text | None, typing.Text | None]
 
 datetime_color: BACK_ARROW = (Back.WHITE, Fore.WHITE)
-levelname_color: typing.Dict[typing.Text, BACK_ARROW] = {
-    "DEBUG": (Back.BLUE, Fore.BLUE),
-    "INFO": (Back.GREEN, Fore.GREEN),
-    "WARNING": (Back.YELLOW, Fore.YELLOW),
-    "ERROR": (Back.RED, Fore.RED),
-    "CRITICAL": (Back.MAGENTA, Fore.MAGENTA),
-    "NOTSET": (Back.BLACK, Fore.BLACK),
+levelname_color: typing.Dict[int, BACK_ARROW] = {
+    logging.DEBUG: (Back.BLUE, Fore.BLUE),
+    logging.INFO: (Back.GREEN, Fore.GREEN),
+    logging.WARNING: (Back.YELLOW, Fore.YELLOW),
+    logging.ERROR: (Back.RED, Fore.RED),
+    logging.CRITICAL: (Back.MAGENTA, Fore.MAGENTA),
+    logging.NOTSET: (Back.BLACK, Fore.BLACK),
 }
-logger_name_color: typing.Dict[typing.Text, BACK_ARROW] = {
-    "DEBUG": (Back.LIGHTBLUE_EX, Fore.LIGHTBLUE_EX),
-    "INFO": (Back.LIGHTGREEN_EX, Fore.LIGHTGREEN_EX),
-    "WARNING": (Back.LIGHTYELLOW_EX, Fore.LIGHTYELLOW_EX),
-    "ERROR": (Back.LIGHTRED_EX, Fore.LIGHTRED_EX),
-    "CRITICAL": (Back.LIGHTMAGENTA_EX, Fore.LIGHTMAGENTA_EX),
-    "NOTSET": (Back.LIGHTBLACK_EX, Fore.LIGHTBLACK_EX),
+logger_name_color: typing.Dict[int, BACK_ARROW] = {
+    logging.DEBUG: (Back.LIGHTBLUE_EX, Fore.LIGHTBLUE_EX),
+    logging.INFO: (Back.LIGHTGREEN_EX, Fore.LIGHTGREEN_EX),
+    logging.WARNING: (Back.LIGHTYELLOW_EX, Fore.LIGHTYELLOW_EX),
+    logging.ERROR: (Back.LIGHTRED_EX, Fore.LIGHTRED_EX),
+    logging.CRITICAL: (Back.LIGHTMAGENTA_EX, Fore.LIGHTMAGENTA_EX),
+    logging.NOTSET: (Back.LIGHTBLACK_EX, Fore.LIGHTBLACK_EX),
 }
-msg_color: typing.Dict[typing.Text, typing.Text | None] = {
-    "DEBUG": None,
-    "INFO": Fore.GREEN,
-    "WARNING": Fore.YELLOW,
-    "ERROR": Fore.RED,
-    "CRITICAL": Fore.MAGENTA,
-    "NOTSET": None,
+msg_color: typing.Dict[int, typing.Text | None] = {
+    logging.DEBUG: None,
+    logging.INFO: Fore.GREEN,
+    logging.WARNING: Fore.YELLOW,
+    logging.ERROR: Fore.RED,
+    logging.CRITICAL: Fore.MAGENTA,
+    logging.NOTSET: None,
 }
+
+
+def to_level(
+    levelname: typing.Text | int,
+) -> typing.Literal[0, 10, 20, 30, 40, 50]:
+    if isinstance(levelname, typing.Text):
+        levelname = levelname.upper()
+        if levelname == "DEBUG":
+            return logging.DEBUG  # type: ignore
+        elif levelname == "INFO":
+            return logging.INFO  # type: ignore
+        elif levelname == "WARNING":
+            return logging.WARNING  # type: ignore
+        elif levelname == "ERROR":
+            return logging.ERROR  # type: ignore
+        elif levelname == "CRITICAL":
+            return logging.CRITICAL  # type: ignore
+        else:
+            return logging.NOTSET  # type: ignore
+    else:
+        if levelname >= logging.CRITICAL:
+            return logging.CRITICAL  # type: ignore
+        elif levelname >= logging.ERROR:
+            return logging.ERROR  # type: ignore
+        elif levelname >= logging.WARNING:
+            return logging.WARNING  # type: ignore
+        elif levelname >= logging.INFO:
+            return logging.INFO  # type: ignore
+        elif levelname >= logging.DEBUG:
+            return logging.DEBUG  # type: ignore
+        else:
+            return logging.NOTSET  # type: ignore
 
 
 def wrap_text(
-    text: typing.Text, fg: typing.Text = "", bg: typing.Text = ""
+    text: typing.Text, *, fg: typing.Text | None = None, bg: typing.Text | None = None
 ) -> typing.Text:
-    return f"{bg}{fg}{text}{Style.RESET_ALL}"
+    fg_str = fg or ""
+    bg_str = bg or ""
+    return f"{bg_str}{fg_str}{text}{Style.RESET_ALL}"
 
 
 class IsoDatetimeFormatter(logging.Formatter):
@@ -104,29 +138,40 @@ class IsoDatetimeFormatter(logging.Formatter):
 class BulletTrainFormatter(IsoDatetimeFormatter):
     def format(self, record: logging.LogRecord):
         arrow = "\uE0B0"
-        level_bg = levelname_bg.get(record.levelname, Back.BLACK)
-        level_emoji = levelname_emoji.get(record.levelname, "")
-        msg_fg = message_fg.get(record.levelname, Fore.WHITE)
-
         ts = self.formatTime(record)
-        time_colored = (
-            f"{Back.WHITE}{Fore.BLACK} {ts} {Style.RESET_ALL}"
-            + f"{level_bg}{Fore.WHITE}{arrow}{Style.RESET_ALL}"
-        )
-        level_colored = (
-            f"{level_bg} {level_emoji} {record.levelname:8s} {Style.RESET_ALL}"
-            + f"{Back.CYAN}{bg2fg[level_bg]}{arrow}{Style.RESET_ALL}"
-        )
-        name_colored = (
-            f"{Back.CYAN} {record.name} {Style.RESET_ALL}"
-            + f"{bg2fg[Back.CYAN]}{arrow}{Style.RESET_ALL}"
-        )
-        message_colored = f"{msg_fg} {record.getMessage()}{Style.RESET_ALL}"
+        level = to_level(record.levelno)
+        levelname = record.levelname
+        emoji = level_emoji_default[level]
+        levelname_with_emoji = f"{emoji} {levelname}"
+        msg_ = record.getMessage()
+        time_color = datetime_color
+        level_color = levelname_color[level]
+        name_color = logger_name_color[level]
+        msg_color_ = msg_color[level]
+        log_line = ""
+
+        # Time
+        time_colored = wrap_text(f" {ts} ", bg=time_color[0])
+        time_out_arrow = wrap_text(arrow, fg=time_color[1], bg=level_color[0])
+        log_line += f"{time_colored}{time_out_arrow}"
+
+        # Logger level
+        level_colored = wrap_text(f" {levelname_with_emoji:10s} ", bg=level_color[0])
+        level_out_arrow = wrap_text(arrow, fg=level_color[1], bg=name_color[0])
+        log_line += f"{level_colored}{level_out_arrow}"
+
+        # Logger name
+        name_colored = wrap_text(record.name, bg=name_color[0])
+        name_out_arrow = wrap_text(arrow, fg=name_color[1])
+        log_line += f"{name_colored}{name_out_arrow}"
+
+        # Message
+        message_colored = wrap_text(msg_, fg=msg_color_)
         if record.exc_info:
             message_colored += "\n" + self.formatException(record.exc_info)
+        log_line += message_colored
 
         # Output the log line
-        log_line = f"{time_colored}{level_colored}{name_colored}{message_colored}"
         return log_line
 
 
@@ -134,11 +179,10 @@ def set_logger(
     logger: logging.Logger | typing.Text,
     *,
     level: int = logging.DEBUG,
-    fmt: typing.Text = "%(asctime)s - %(levelname)s - %(name)s - %(message)s",
 ) -> logging.Logger:
     logger = logging.getLogger(logger) if isinstance(logger, typing.Text) else logger
     handler = logging.StreamHandler()
-    formatter = BulletTrainFormatter(fmt=fmt)
+    formatter = BulletTrainFormatter()
     handler.setFormatter(formatter)
     handler.setLevel(level)
     logger.addHandler(handler)
@@ -147,8 +191,10 @@ def set_logger(
 
 
 if __name__ == "__main__":
-    logger = set_logger("sdk")
+    logger = set_logger("sdk", level=logging.DEBUG)
     logger.debug("debug message")
     logger.info("info message")
     logger.warning("warning message")
     logger.error("error message")
+    logger.critical("critical message")
+    logger.log(logging.NOTSET, "notset message")
