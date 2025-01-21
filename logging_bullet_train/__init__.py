@@ -123,19 +123,30 @@ class IsoDatetimeFormatter(logging.Formatter):
     def formatTime(
         self, record: logging.LogRecord, datefmt: typing.Literal[None] = None
     ):
-        try:
-            if (TZ_ := os.getenv("TZ")) and TZ_.strip():
-                local_tz = zoneinfo.ZoneInfo(TZ_)
-            else:
-                local_tz = tzlocal.get_localzone()
-        except Exception:
-            local_tz = zoneinfo.ZoneInfo("UTC")
         record_datetime = datetime.datetime.fromtimestamp(record.created).astimezone(
-            local_tz
+            self._get_local_timezone()
         )
         # Drop microseconds
         record_datetime = record_datetime.replace(microsecond=0)
         return record_datetime.isoformat()
+
+    def _get_local_timezone(self) -> zoneinfo.ZoneInfo:
+        """
+        Attempt to fetch the time zone from the TZ environment variable.
+        If missing or invalid, fall back to the system local zone,
+        and if that fails, default to UTC.
+        """
+        tz_env = os.getenv("TZ")
+        if tz_env and tz_env.strip():
+            try:
+                return zoneinfo.ZoneInfo(tz_env.strip())
+            except Exception:
+                pass
+        # Fallback: system local zone or UTC
+        try:
+            return tzlocal.get_localzone()
+        except Exception:
+            return zoneinfo.ZoneInfo("UTC")
 
 
 class BulletTrainFormatter(IsoDatetimeFormatter):
