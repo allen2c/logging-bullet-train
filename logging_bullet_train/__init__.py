@@ -164,12 +164,12 @@ class BulletTrainFormatter(IsoDatetimeFormatter):
         log_line += f"{level_colored}{level_out_arrow}"
 
         # Logger name
-        name_colored = wrap_text(record.name, bg=name_color[0])
+        name_colored = wrap_text(f" {record.name}:{record.lineno} ", bg=name_color[0])
         name_out_arrow = wrap_text(arrow, fg=name_color[1])
         log_line += f"{name_colored}{name_out_arrow}"
 
         # Message
-        message_colored = wrap_text(msg_, fg=msg_color_)
+        message_colored = wrap_text(f" {msg_}", fg=msg_color_)
         if record.exc_info:
             message_colored += "\n" + self.formatException(record.exc_info)
         log_line += message_colored
