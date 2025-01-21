@@ -7,13 +7,16 @@ import zoneinfo
 import tzlocal
 from colorama import Back, Fore, Style
 
+LOGGING_UNKNOWN = 1
+logging.addLevelName(LOGGING_UNKNOWN, "UNKNOWN")
+
 level_emoji_default = {
     logging.DEBUG: "🔎",
     logging.INFO: "💡",
     logging.WARNING: "⭐",
     logging.ERROR: "🚨",
     logging.CRITICAL: "🔥",
-    logging.NOTSET: "🔘",
+    LOGGING_UNKNOWN: "🔘",
 }
 level_emoji_fruit = {
     logging.DEBUG: "🫐",
@@ -21,7 +24,7 @@ level_emoji_fruit = {
     logging.WARNING: "🍋",
     logging.ERROR: "🍒",
     logging.CRITICAL: "🌶️",
-    logging.NOTSET: "🍇",
+    LOGGING_UNKNOWN: "🍇",
 }
 level_emoji_weather = {
     logging.DEBUG: "🌤️",
@@ -29,7 +32,7 @@ level_emoji_weather = {
     logging.WARNING: "🌦️",
     logging.ERROR: "⛈️",
     logging.CRITICAL: "🌪️",
-    logging.NOTSET: "🌈",
+    LOGGING_UNKNOWN: "🌈",
 }
 level_emoji_night = {
     logging.DEBUG: "🌑",
@@ -37,7 +40,7 @@ level_emoji_night = {
     logging.WARNING: "🌕",
     logging.ERROR: "🌠",
     logging.CRITICAL: "☄️",
-    logging.NOTSET: "🌌",
+    LOGGING_UNKNOWN: "🌌",
 }
 level_emojis = {
     "default": level_emoji_default,
@@ -56,7 +59,7 @@ levelname_color: typing.Dict[int, BACK_ARROW] = {
     logging.WARNING: (Back.YELLOW, Fore.YELLOW),
     logging.ERROR: (Back.RED, Fore.RED),
     logging.CRITICAL: (Back.MAGENTA, Fore.MAGENTA),
-    logging.NOTSET: (Back.BLACK, Fore.BLACK),
+    LOGGING_UNKNOWN: (Back.BLACK, Fore.BLACK),
 }
 logger_name_color: typing.Dict[int, BACK_ARROW] = {
     logging.DEBUG: (Back.LIGHTBLUE_EX, Fore.LIGHTBLUE_EX),
@@ -64,7 +67,7 @@ logger_name_color: typing.Dict[int, BACK_ARROW] = {
     logging.WARNING: (Back.LIGHTYELLOW_EX, Fore.LIGHTYELLOW_EX),
     logging.ERROR: (Back.LIGHTRED_EX, Fore.LIGHTRED_EX),
     logging.CRITICAL: (Back.LIGHTMAGENTA_EX, Fore.LIGHTMAGENTA_EX),
-    logging.NOTSET: (Back.LIGHTBLACK_EX, Fore.LIGHTBLACK_EX),
+    LOGGING_UNKNOWN: (Back.LIGHTBLACK_EX, Fore.LIGHTBLACK_EX),
 }
 msg_color: typing.Dict[int, typing.Text | None] = {
     logging.DEBUG: None,
@@ -72,13 +75,13 @@ msg_color: typing.Dict[int, typing.Text | None] = {
     logging.WARNING: Fore.YELLOW,
     logging.ERROR: Fore.RED,
     logging.CRITICAL: Fore.MAGENTA,
-    logging.NOTSET: None,
+    LOGGING_UNKNOWN: None,
 }
 
 
 def to_level(
     levelname: typing.Text | int,
-) -> typing.Literal[0, 10, 20, 30, 40, 50]:
+) -> typing.Literal[1, 10, 20, 30, 40, 50]:
     if isinstance(levelname, typing.Text):
         levelname = levelname.upper()
         if levelname == "DEBUG":
@@ -92,7 +95,7 @@ def to_level(
         elif levelname == "CRITICAL":
             return logging.CRITICAL  # type: ignore
         else:
-            return logging.NOTSET  # type: ignore
+            return LOGGING_UNKNOWN  # type: ignore
     else:
         if levelname >= logging.CRITICAL:
             return logging.CRITICAL  # type: ignore
@@ -105,7 +108,7 @@ def to_level(
         elif levelname >= logging.DEBUG:
             return logging.DEBUG  # type: ignore
         else:
-            return logging.NOTSET  # type: ignore
+            return LOGGING_UNKNOWN  # type: ignore
 
 
 def wrap_text(
@@ -197,4 +200,4 @@ if __name__ == "__main__":
     logger.warning("warning message")
     logger.error("error message")
     logger.critical("critical message")
-    logger.log(logging.NOTSET, "notset message")
+    logger.log(1, "notset message")
