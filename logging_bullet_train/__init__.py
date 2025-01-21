@@ -4,87 +4,104 @@ import os
 import typing
 import zoneinfo
 
+import tzlocal
 from colorama import Back, Fore, Style
 
-levelname_emoji = {
+level_emoji_default = {
+    "DEBUG": "🔎",
+    "INFO": "💡",
+    "WARNING": "⭐",
+    "ERROR": "🚨",
+    "CRITICAL": "🔥",
+    "NOTSET": "🔘",
+}
+level_emoji_fruit = {
     "DEBUG": "🫐",
-    # "DEBUG": "🔎",
     "INFO": "🍏",
     "WARNING": "🍋",
     "ERROR": "🍒",
     "CRITICAL": "🌶️",
+    "NOTSET": "🍇",
+}
+level_emoji_weather = {
+    "DEBUG": "🌤️",
+    "INFO": "☀️",
+    "WARNING": "🌦️",
+    "ERROR": "⛈️",
+    "CRITICAL": "🌪️",
+    "NOTSET": "🌈",
+}
+level_emoji_night = {
+    "DEBUG": "🌑",
+    "INFO": "🌓",
+    "WARNING": "🌕",
+    "ERROR": "🌠",
+    "CRITICAL": "☄️",
+    "NOTSET": "🌌",
+}
+level_emojis = {
+    "default": level_emoji_default,
+    "fruit": level_emoji_fruit,
+    "weather": level_emoji_weather,
+    "night": level_emoji_night,
 }
 
-levelname_bg = {
-    "DEBUG": Back.BLUE,
-    "INFO": Back.GREEN,
-    "WARNING": Back.YELLOW,
-    "ERROR": Back.RED,
-    "CRITICAL": Back.RED,
+
+type BACK_ARROW = typing.Tuple[typing.Text | None, typing.Text | None]
+
+datetime_color: BACK_ARROW = (Back.WHITE, Fore.WHITE)
+levelname_color: typing.Dict[typing.Text, BACK_ARROW] = {
+    "DEBUG": (Back.BLUE, Fore.BLUE),
+    "INFO": (Back.GREEN, Fore.GREEN),
+    "WARNING": (Back.YELLOW, Fore.YELLOW),
+    "ERROR": (Back.RED, Fore.RED),
+    "CRITICAL": (Back.MAGENTA, Fore.MAGENTA),
+    "NOTSET": (Back.BLACK, Fore.BLACK),
 }
-message_fg = {
-    "DEBUG": Fore.BLUE,
+logger_name_color: typing.Dict[typing.Text, BACK_ARROW] = {
+    "DEBUG": (Back.LIGHTBLUE_EX, Fore.LIGHTBLUE_EX),
+    "INFO": (Back.LIGHTGREEN_EX, Fore.LIGHTGREEN_EX),
+    "WARNING": (Back.LIGHTYELLOW_EX, Fore.LIGHTYELLOW_EX),
+    "ERROR": (Back.LIGHTRED_EX, Fore.LIGHTRED_EX),
+    "CRITICAL": (Back.LIGHTMAGENTA_EX, Fore.LIGHTMAGENTA_EX),
+    "NOTSET": (Back.LIGHTBLACK_EX, Fore.LIGHTBLACK_EX),
+}
+msg_color: typing.Dict[typing.Text, typing.Text | None] = {
+    "DEBUG": None,
     "INFO": Fore.GREEN,
     "WARNING": Fore.YELLOW,
     "ERROR": Fore.RED,
-    "CRITICAL": Fore.RED,
-}
-bg2fg = {
-    Back.BLACK: Fore.BLACK,
-    Back.RED: Fore.RED,
-    Back.GREEN: Fore.GREEN,
-    Back.YELLOW: Fore.YELLOW,
-    Back.BLUE: Fore.BLUE,
-    Back.MAGENTA: Fore.MAGENTA,
-    Back.CYAN: Fore.CYAN,
-    Back.WHITE: Fore.WHITE,
-    Back.RESET: Fore.WHITE,
-    Back.LIGHTBLACK_EX: Fore.WHITE,
-    Back.LIGHTRED_EX: Fore.WHITE,
-    Back.LIGHTGREEN_EX: Fore.BLACK,
-    Back.LIGHTYELLOW_EX: Fore.BLACK,
-    Back.LIGHTBLUE_EX: Fore.WHITE,
-    Back.LIGHTMAGENTA_EX: Fore.WHITE,
-    Back.LIGHTCYAN_EX: Fore.BLACK,
-    Back.LIGHTWHITE_EX: Fore.BLACK,
+    "CRITICAL": Fore.MAGENTA,
+    "NOTSET": None,
 }
 
 
-def bg_to_fg(bg: typing.Text) -> typing.Text:
-    return {
-        Back.BLACK: Fore.WHITE,
-        Back.RED: Fore.WHITE,
-        Back.GREEN: Fore.BLACK,
-        Back.YELLOW: Fore.BLACK,
-        Back.BLUE: Fore.WHITE,
-        Back.MAGENTA: Fore.WHITE,
-        Back.CYAN: Fore.BLACK,
-        Back.WHITE: Fore.BLACK,
-        Back.RESET: Fore.WHITE,
-        Back.LIGHTBLACK_EX: Fore.WHITE,
-        Back.LIGHTRED_EX: Fore.WHITE,
-        Back.LIGHTGREEN_EX: Fore.BLACK,
-        Back.LIGHTYELLOW_EX: Fore.BLACK,
-        Back.LIGHTBLUE_EX: Fore.WHITE,
-        Back.LIGHTMAGENTA_EX: Fore.WHITE,
-        Back.LIGHTCYAN_EX: Fore.BLACK,
-        Back.LIGHTWHITE_EX: Fore.BLACK,
-    }[bg]
+def wrap_text(
+    text: typing.Text, fg: typing.Text = "", bg: typing.Text = ""
+) -> typing.Text:
+    return f"{bg}{fg}{text}{Style.RESET_ALL}"
 
 
 class IsoDatetimeFormatter(logging.Formatter):
     def formatTime(
         self, record: logging.LogRecord, datefmt: typing.Literal[None] = None
     ):
+        try:
+            if (TZ_ := os.getenv("TZ")) and TZ_.strip():
+                local_tz = zoneinfo.ZoneInfo(TZ_)
+            else:
+                local_tz = tzlocal.get_localzone()
+        except Exception:
+            local_tz = zoneinfo.ZoneInfo("UTC")
         record_datetime = datetime.datetime.fromtimestamp(record.created).astimezone(
-            zoneinfo.ZoneInfo(os.getenv("TZ") or "UTC")
+            local_tz
         )
         # Drop microseconds
         record_datetime = record_datetime.replace(microsecond=0)
         return record_datetime.isoformat()
 
 
-class ColoredIsoDatetimeFormatter(IsoDatetimeFormatter):
+class BulletTrainFormatter(IsoDatetimeFormatter):
     def format(self, record: logging.LogRecord):
         arrow = "\uE0B0"
         level_bg = levelname_bg.get(record.levelname, Back.BLACK)
@@ -114,26 +131,18 @@ class ColoredIsoDatetimeFormatter(IsoDatetimeFormatter):
 
 
 def set_logger(
-    logger: logging.Logger | typing.Text, *, level: int = logging.DEBUG
+    logger: logging.Logger | typing.Text,
+    *,
+    level: int = logging.DEBUG,
+    fmt: typing.Text = "%(asctime)s - %(levelname)s - %(name)s - %(message)s",
 ) -> logging.Logger:
     logger = logging.getLogger(logger) if isinstance(logger, typing.Text) else logger
-
-    # Remove all handlers of logger
-    logger.handlers = []
-
-    # Add a stream handler
     handler = logging.StreamHandler()
-
-    # Set the formatter
-    handler.setFormatter(ColoredIsoDatetimeFormatter())
-
-    # Set the level
+    formatter = BulletTrainFormatter(fmt=fmt)
+    handler.setFormatter(formatter)
     handler.setLevel(level)
-
-    # Add the handler to the logger
     logger.addHandler(handler)
     logger.setLevel(level)
-
     return logger
 
 
