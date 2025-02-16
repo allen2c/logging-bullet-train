@@ -50,7 +50,7 @@ level_emojis = {
 }
 
 
-type BACK_ARROW = typing.Tuple[typing.Text | None, typing.Text | None]
+BACK_ARROW: typing.TypeAlias = typing.Tuple[typing.Text | None, typing.Text | None]
 
 datetime_color: BACK_ARROW = (Back.WHITE, Fore.WHITE)
 levelname_color: typing.Dict[int, BACK_ARROW] = {
