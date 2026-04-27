@@ -10,7 +10,6 @@ version = "0.4.0"
 [tool.poetry.dependencies]
 colorama = "*"
 python = ">=3.11,<4.0"
-tzlocal = "*"
 
 [tool.poetry.extras]
 all = []

@@ -1,3 +1,1 @@
 colorama==0.4.6 ; python_version >= "3.11" and python_version < "4.0"
-tzdata==2026.2 ; python_version >= "3.11" and python_version < "4.0" and platform_system == "Windows"
-tzlocal==5.3.1 ; python_version >= "3.11" and python_version < "4.0"
