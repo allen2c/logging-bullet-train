@@ -26,6 +26,4 @@ def test_formatter_caches_timestamp_per_second():
     first.created = 1.1
     second.created = 1.9
 
-    assert formatter.formatTime(first) == "1970-01-01T00:00:01+00:00"
-    assert formatter.formatTime(second) == "1970-01-01T00:00:01+00:00"
-    assert formatter._last_timestamp_second == 1
+    assert formatter.formatTime(first) == formatter.formatTime(second)

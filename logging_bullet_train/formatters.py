@@ -19,15 +19,15 @@ from logging_bullet_train.colors import (
 )
 from logging_bullet_train.themes import LOGGING_UNKNOWN, Theme, get_theme
 
-Level: typing.TypeAlias = typing.Literal[1, 10, 20, 30, 40, 50]
+Level: typing.TypeAlias = int
 Timezone: typing.TypeAlias = str | datetime.tzinfo | None
 _LEVELS: tuple[Level, ...] = (
-    LOGGING_UNKNOWN,  # type: ignore[list-item]
-    logging.DEBUG,  # type: ignore[list-item]
-    logging.INFO,  # type: ignore[list-item]
-    logging.WARNING,  # type: ignore[list-item]
-    logging.ERROR,  # type: ignore[list-item]
-    logging.CRITICAL,  # type: ignore[list-item]
+    LOGGING_UNKNOWN,
+    logging.DEBUG,
+    logging.INFO,
+    logging.WARNING,
+    logging.ERROR,
+    logging.CRITICAL,
 )
 
 
@@ -37,16 +37,16 @@ def to_level(levelname: str | int) -> Level:
         return _level_from_name(levelname)
 
     if levelname >= logging.CRITICAL:
-        return logging.CRITICAL  # type: ignore[return-value]
+        return logging.CRITICAL
     if levelname >= logging.ERROR:
-        return logging.ERROR  # type: ignore[return-value]
+        return logging.ERROR
     if levelname >= logging.WARNING:
-        return logging.WARNING  # type: ignore[return-value]
+        return logging.WARNING
     if levelname >= logging.INFO:
-        return logging.INFO  # type: ignore[return-value]
+        return logging.INFO
     if levelname >= logging.DEBUG:
-        return logging.DEBUG  # type: ignore[return-value]
-    return LOGGING_UNKNOWN  # type: ignore[return-value]
+        return logging.DEBUG
+    return LOGGING_UNKNOWN
 
 
 class IsoDatetimeFormatter(logging.Formatter):
@@ -252,4 +252,4 @@ def _level_from_name(levelname: str) -> Level:
     level = logging.getLevelNamesMapping().get(levelname.upper())
     if isinstance(level, int):
         return to_level(level)
-    return LOGGING_UNKNOWN  # type: ignore[return-value]
+    return LOGGING_UNKNOWN

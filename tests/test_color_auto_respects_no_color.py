@@ -1,10 +1,10 @@
 import logging_bullet_train as lbt
-from tests._helpers import ANSI_RE, stream_logger
+from tests._helpers import ANSI_RE, TtyStringIO, stream_logger
 
 
 def test_color_auto_respects_no_color(monkeypatch):
-    stream, logger = stream_logger("tests.no_color_env")
-    stream.isatty = lambda: True  # type: ignore[attr-defined]
+    _, logger = stream_logger("tests.no_color_env")
+    stream = TtyStringIO()
     monkeypatch.setenv("NO_COLOR", "1")
 
     lbt.set_logger(logger, stream=stream, color="auto")
