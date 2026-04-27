@@ -151,7 +151,7 @@ class IsoDatetimeFormatter(logging.Formatter):
 
 class BulletTrainFormatter(IsoDatetimeFormatter):
     def format(self, record: logging.LogRecord):
-        arrow = "\uE0B0"
+        arrow = "\ue0b0"
         ts = self.formatTime(record)
         level = to_level(record.levelno)
         levelname = record.levelname
