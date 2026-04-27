@@ -3,6 +3,8 @@
 A bullet-train style Python logging utility with colorful, emoji-enhanced log
 messages.
 
+Documentation: <https://allen2c.github.io/logging-bullet-train/>
+
 ## Features
 
 - Colorful log levels and readable segment separators.
@@ -20,7 +22,7 @@ pip install logging-bullet-train
 For development:
 
 ```bash
-poetry install
+poetry install --with dev
 ```
 
 ## Usage
@@ -148,6 +150,24 @@ logger = logging.getLogger("manual")
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 ```
+
+## Documentation
+
+The documentation site is built with MkDocs Material.
+
+Serve it locally:
+
+```bash
+poetry run mkdocs serve
+```
+
+Build it strictly:
+
+```bash
+poetry run mkdocs build --strict
+```
+
+GitHub Actions builds and deploys GitHub Pages when `main` is pushed.
 
 ## License
 
