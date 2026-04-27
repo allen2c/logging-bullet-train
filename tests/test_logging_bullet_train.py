@@ -153,7 +153,7 @@ def test_all_builtin_themes_are_complete():
         lbt.LOGGING_UNKNOWN,
     }
 
-    assert len(lbt.level_emojis) >= 20
+    assert len(lbt.level_emojis) >= 45
     for theme in lbt.level_emojis.values():
         assert required_levels <= theme.keys()
 

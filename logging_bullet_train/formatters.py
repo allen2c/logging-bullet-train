@@ -166,7 +166,7 @@ def resolve_timezone(timezone: Timezone = None) -> datetime.tzinfo:
 
 
 def _level_from_name(levelname: str) -> Level:
-    level = logging.getLevelName(levelname.upper())
+    level = logging.getLevelNamesMapping().get(levelname.upper())
     if isinstance(level, int):
         return to_level(level)
     return LOGGING_UNKNOWN  # type: ignore[return-value]

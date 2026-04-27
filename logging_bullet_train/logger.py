@@ -71,7 +71,7 @@ def set_logger(
 
 def _coerce_logging_level(level: int | str) -> int:
     if isinstance(level, str):
-        value = logging.getLevelName(level.upper())
+        value = logging.getLevelNamesMapping().get(level.upper())
         if isinstance(value, int):
             return value
         raise ValueError(f"unknown logging level: {level!r}")

@@ -7,7 +7,7 @@ messages.
 
 - Colorful log levels and readable segment separators.
 - ISO-8601 timestamps with `zoneinfo` timezone support.
-- 20+ built-in emoji themes plus custom theme mappings.
+- 45 built-in emoji themes plus custom theme mappings.
 - Idempotent logger setup to avoid duplicate log lines.
 - Configurable stream, color mode, propagation, and visible format sections.
 
