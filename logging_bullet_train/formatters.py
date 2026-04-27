@@ -6,6 +6,8 @@ import os
 import typing
 import zoneinfo
 
+from colorama import Style
+
 from logging_bullet_train.colors import (
     ColorMode,
     datetime_color,
@@ -19,6 +21,14 @@ from logging_bullet_train.themes import LOGGING_UNKNOWN, Theme, get_theme
 
 Level: typing.TypeAlias = typing.Literal[1, 10, 20, 30, 40, 50]
 Timezone: typing.TypeAlias = str | datetime.tzinfo | None
+_LEVELS: tuple[Level, ...] = (
+    LOGGING_UNKNOWN,  # type: ignore[list-item]
+    logging.DEBUG,  # type: ignore[list-item]
+    logging.INFO,  # type: ignore[list-item]
+    logging.WARNING,  # type: ignore[list-item]
+    logging.ERROR,  # type: ignore[list-item]
+    logging.CRITICAL,  # type: ignore[list-item]
+)
 
 
 def to_level(levelname: str | int) -> Level:
@@ -90,46 +100,104 @@ class BulletTrainFormatter(IsoDatetimeFormatter):
         self.show_logger_name = show_logger_name
         self.show_lineno = show_lineno
         self.show_message = show_message
+        self._last_timestamp_second: int | None = None
+        self._last_timestamp_text = ""
+        self._time_parts = self._build_time_parts()
+        self._level_block_cache: dict[tuple[int, str], str] = {}
+        self._logger_name_parts = self._build_logger_name_parts()
+        self._message_style = self._build_message_styles()
 
     def format(self, record: logging.LogRecord) -> str:
         level = to_level(record.levelno)
-        blocks = self._blocks(record, level)
+        prefix = self._prefix(record, level)
         message = self._message(record, level)
-
-        line = message.lstrip() if not blocks else "".join(blocks) + message
+        line = message.lstrip() if not prefix else prefix + message
         if record.exc_info:
             line += "\n" + self.formatException(record.exc_info)
         return line
 
-    def _blocks(self, record: logging.LogRecord, level: int) -> list[str]:
-        blocks = []
+    def formatTime(
+        self,
+        record: logging.LogRecord,
+        datefmt: str | None = None,
+    ) -> str:
+        second = int(record.created)
+        if second != self._last_timestamp_second:
+            self._last_timestamp_second = second
+            self._last_timestamp_text = super().formatTime(record, datefmt)
+        return self._last_timestamp_text
+
+    def _prefix(self, record: logging.LogRecord, level: int) -> str:
+        prefix = ""
 
         if self.show_datetime:
-            next_bg = levelname_color[level][0] if self.show_level else None
-            if not next_bg and self.show_logger_name:
-                next_bg = logger_name_color[level][0]
-            blocks.append(
-                self._block(f" {self.formatTime(record)} ", datetime_color, next_bg)
-            )
+            left, right = self._time_parts[level]
+            prefix += f"{left}{self.formatTime(record)}{right}"
 
         if self.show_level:
-            levelname = f"{self.theme[level]} {record.levelname}"
-            bg = levelname_color[level][0]
-            fg = levelname_color[level][1]
-            following_bg = (
-                logger_name_color[level][0] if self.show_logger_name else None
-            )
-            blocks.append(self._block(f" {levelname:10s} ", (bg, fg), following_bg))
+            prefix += self._level_block(level, record.levelname)
 
         if self.show_logger_name:
             name = record.name
             if self.show_lineno:
                 name = f"{name}:{record.lineno}"
-            bg = logger_name_color[level][0]
-            fg = logger_name_color[level][1]
-            blocks.append(self._block(f" {name} ", (bg, fg), None))
+            left, right = self._logger_name_parts[level]
+            prefix += f"{left}{name}{right}"
 
-        return blocks
+        return prefix
+
+    def _message(self, record: logging.LogRecord, level: int) -> str:
+        if not self.show_message:
+            return ""
+        message = record.getMessage()
+        prefix, suffix = self._message_style[level]
+        return f"{prefix}{message}{suffix}"
+
+    def _build_message_styles(self) -> dict[int, tuple[str, str]]:
+        styles = {}
+        for level in _LEVELS:
+            color = msg_color[level]
+            if self.color and color:
+                styles[level] = (f"{color} ", Style.RESET_ALL)
+            else:
+                styles[level] = (" ", "")
+        return styles
+
+    def _build_time_parts(self) -> dict[int, tuple[str, str]]:
+        parts = {}
+        if not self.show_datetime:
+            return parts
+
+        for level in _LEVELS:
+            next_bg = levelname_color[level][0] if self.show_level else None
+            if not next_bg and self.show_logger_name:
+                next_bg = logger_name_color[level][0]
+            parts[level] = self._block_parts(datetime_color, next_bg)
+        return parts
+
+    def _build_logger_name_parts(self) -> dict[int, tuple[str, str]]:
+        if not self.show_logger_name:
+            return {}
+        return {
+            level: self._block_parts(logger_name_color[level], None)
+            for level in _LEVELS
+        }
+
+    def _level_block(self, level: int, levelname: str) -> str:
+        key = (level, levelname)
+        try:
+            return self._level_block_cache[key]
+        except KeyError:
+            block = self._build_level_block(level, levelname)
+            self._level_block_cache[key] = block
+            return block
+
+    def _build_level_block(self, level: int, levelname: str) -> str:
+        levelname = f"{self.theme[level]} {levelname}"
+        bg = levelname_color[level][0]
+        fg = levelname_color[level][1]
+        following_bg = logger_name_color[level][0] if self.show_logger_name else None
+        return self._block(f" {levelname:10s} ", (bg, fg), following_bg)
 
     def _block(
         self,
@@ -137,15 +205,30 @@ class BulletTrainFormatter(IsoDatetimeFormatter):
         colors: tuple[str | None, str | None],
         next_bg: str | None,
     ) -> str:
-        colored = wrap_text(text, bg=colors[0], color=self.color)
-        arrow = wrap_text(self.arrow, fg=colors[1], bg=next_bg, color=self.color)
-        return f"{colored}{arrow}"
+        return self._wrap(text, bg=colors[0]) + self._wrap(
+            self.arrow, fg=colors[1], bg=next_bg
+        )
 
-    def _message(self, record: logging.LogRecord, level: int) -> str:
-        if not self.show_message:
-            return ""
-        message = record.getMessage()
-        return wrap_text(f" {message}", fg=msg_color[level], color=self.color)
+    def _block_parts(
+        self,
+        colors: tuple[str | None, str | None],
+        next_bg: str | None,
+    ) -> tuple[str, str]:
+        if not self.color:
+            return " ", f" {self.arrow}"
+
+        bg, fg = colors
+        arrow = self._wrap(self.arrow, fg=fg, bg=next_bg)
+        return f"{bg or ''} ", f" {Style.RESET_ALL}{arrow}"
+
+    def _wrap(
+        self,
+        text: str,
+        *,
+        fg: str | None = None,
+        bg: str | None = None,
+    ) -> str:
+        return wrap_text(text, fg=fg, bg=bg, color=self.color)
 
 
 def resolve_timezone(timezone: Timezone = None) -> datetime.tzinfo:
