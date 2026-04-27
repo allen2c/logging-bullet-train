@@ -1,6 +1,7 @@
 # Custom
 .cache
 data
+poetry.lock
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -72,6 +73,9 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+
+# MkDocs
+site/
 
 # PyBuilder
 .pybuilder/

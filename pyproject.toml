@@ -5,34 +5,31 @@ license = "MIT"
 name = "logging-bullet-train"
 packages = [{ include = "logging_bullet_train" }]
 readme = "README.md"
-version = "0.3.0"
+version = "0.4.0"
 
 [tool.poetry.dependencies]
 colorama = "*"
 python = ">=3.11,<4.0"
-tzlocal = "*"
 
 [tool.poetry.extras]
 all = []
 
-[tool.poetry.group.docs.dependencies]
+[tool.poetry.group.dev.dependencies]
+black = { extras = ["jupyter"], version = "*" }
 mkdocs-git-authors-plugin = "*"
 mkdocs-git-committers-plugin-2 = "*"
 mkdocs-git-revision-date-localized-plugin = "*"
-mkdocs-material = "^9"
+mkdocs-material = "*"
 mkdocs-minify-plugin = "*"
 mkdocs-nav-weight = "*"
 mkdocs-redirects = "*"
 mkdocs-render-swagger-plugin = "*"
 neoteroi-mkdocs = "*"
-
-[tool.poetry.group.dev.dependencies]
-black = { extras = ["jupyter"], version = "*" }
-poetry-plugin-export = "^1.6.0"
-pytest = "^8"
+poetry-plugin-export = "*"
+pytest = "*"
 pytest-asyncio = "*"
-pytest-cov = "^4"
-pytest-xdist = "^3"
+pytest-cov = "*"
+pytest-xdist = "*"
 setuptools = ">=69"
 
 [tool.isort]

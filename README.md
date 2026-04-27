@@ -1,112 +1,174 @@
 # logging-bullet-train
 
-A bullet-train style Python logging utility that enhances your logging output with colorful and emoji-enhanced messages for better readability and quicker debugging.
+A bullet-train style Python logging utility with colorful, emoji-enhanced log
+messages.
+
+Documentation: <https://allen2c.github.io/logging-bullet-train/>
 
 ## Features
 
-- **Colorful Log Levels**: Each log level is color-coded for immediate recognition.
-- **Emoji Indicators**: Visual emojis represent different log levels, making logs more intuitive.
-- **ISO Datetime Formatting**: Timestamps are formatted in ISO format for consistency.
-- **Customizable**: Easily configurable to fit your project's needs.
-- **Supports Multiple Environments**: Compatible with various environments and Python versions.
+- Colorful log levels and readable segment separators.
+- ISO-8601 timestamps with `zoneinfo` timezone support.
+- 45 built-in emoji themes plus custom theme mappings.
+- Idempotent logger setup to avoid duplicate log lines.
+- Configurable stream, color mode, propagation, and visible format sections.
 
 ## Installation
-
-You can install `logging-bullet-train` using `pip`:
 
 ```bash
 pip install logging-bullet-train
 ```
 
-For development purposes, use Poetry to install all dependencies:
+For development:
 
 ```bash
-poetry install
+poetry install --with dev
 ```
 
 ## Usage
 
-Here's a simple example to get you started:
+```python
+import logging
+
+import logging_bullet_train as lbt
+
+logger = lbt.set_logger("my_logger", level=logging.DEBUG)
+
+logger.debug("debug message")
+logger.info("info message")
+logger.warning("warning message")
+logger.error("error message")
+logger.critical("critical message")
+logger.log(1, "unknown message")
+```
+
+Sample output:
+
+```text
+2026-04-27T08:08:12+00:00  🔎 DEBUG     my_logger:8  debug message
+2026-04-27T08:08:12+00:00  💡 INFO      my_logger:9  info message
+2026-04-27T08:08:12+00:00  ⭐ WARNING   my_logger:10  warning message
+```
+
+## Configuration
+
+```python
+import logging
+import sys
+
+from logging_bullet_train import set_logger
+
+logger = set_logger(
+    "app",
+    level="INFO",
+    theme="rocket",
+    color="auto",
+    stream=sys.stderr,
+    timezone="Asia/Taipei",
+    show_datetime=True,
+    show_logger_name=True,
+    show_lineno=True,
+    propagate=False,
+)
+```
+
+Logging defaults to `stderr`, which is the usual choice for logs because it keeps
+program output on `stdout` clean for shell pipelines.
+
+### Themes
+
+Use a named theme:
+
+```python
+logger = set_logger("app", theme="terminal")
+```
+
+Built-in themes:
+
+```python
+from logging_bullet_train import level_emojis
+
+print(sorted(level_emojis))
+```
+
+Use a custom theme mapping:
 
 ```python
 import logging
 
-import logging_bullet_train
-
-# Set up the logger
-logger = logging_bullet_train.set_logger("my_logger", level=logging.DEBUG)
-
-# Log messages with different severity levels
-logger.debug("This is a debug message")     # 🔎 DEBUG
-logger.info("This is an info message")      # 💡 INFO
-logger.warning("This is a warning message") # ⭐ WARNING
-logger.error("This is an error message")    # 🚨 ERROR
-logger.critical("This is a critical message")  # 🔥 CRITICAL
-logger.log(1, "notset message")             # 🔘 UNKNOWN
+logger = set_logger("app", theme={logging.INFO: "ok"})
 ```
 
-**Sample Output:**
+Custom themes are merged with the default theme, so you only need to override
+the levels you care about.
 
-```
-2024-12-21T08:08:12+00:00  🔎 DEBUG      my_logger:12  This is a debug message
-2024-12-21T08:08:12+00:00  💡 INFO       my_logger:13  This is an info message
-2024-12-21T08:08:12+00:00  ⭐ WARNING    my_logger:14  This is a warning message
-2024-12-21T08:08:12+00:00  🚨 ERROR      my_logger:15  This is an error message
-2024-12-21T08:08:12+00:00  🔥 CRITICAL   my_logger:16  This is a critical message
-2024-12-21T08:08:12+00:00  🔘 UNKNOWN    my_logger:17  notset message
-```
-
-## Advanced Configuration
-
-### Selecting an Emoji Theme
-
-By default, the logger uses a set of emojis defined in the `default` theme:
-
-- DEBUG: 🔎
-- INFO: 💡
-- WARNING: ⭐
-- ERROR: 🚨
-- CRITICAL: 🔥
-- UNKNOWN: 🔘
-
-Additional themes such as `fruit`, `weather`, and `night` are available in the source code. To switch themes, you can modify the formatter to use a different emoji mapping. For example:
+### Color
 
 ```python
-from logging_bullet_train import level_emoji_fruit, BulletTrainFormatter, set_logger
+set_logger("app", color=True)
+set_logger("app", color=False)
+set_logger("app", color="auto")
+set_logger("app", color="always")
+set_logger("app", color="never")
+```
 
-class FruitBulletTrainFormatter(BulletTrainFormatter):
-    def format(self, record):
-        # Override emoji selection to use fruit theme
-        level = record.levelno
-        emoji = level_emoji_fruit.get(level, level_emoji_fruit[logging_bullet_train.LOGGING_UNKNOWN])
-        record.levelname = f"{emoji} {record.levelname}"
-        return super().format(record)
+`"auto"` enables color only for TTY streams and respects the `NO_COLOR`
+environment variable.
 
-# Set up the logger with the custom formatter
-logger = logging.getLogger("fruit_logger")
+### Format Sections
+
+```python
+set_logger(
+    "app",
+    show_datetime=False,
+    show_logger_name=False,
+    show_lineno=False,
+)
+```
+
+### Logger Attributes
+
+```python
+set_logger("app", propagate=False, disabled=False)
+```
+
+`set_logger()` also avoids adding duplicate bullet-train handlers when called
+more than once for the same logger and stream. Pass `replace_handlers=True` to
+replace existing bullet-train handlers.
+
+## Manual Handler Setup
+
+```python
+import logging
+
+from logging_bullet_train import BulletTrainFormatter
+
 handler = logging.StreamHandler()
-handler.setFormatter(FruitBulletTrainFormatter())
+handler.setFormatter(BulletTrainFormatter(theme="weather", color="auto"))
+
+logger = logging.getLogger("manual")
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
-
-logger.info("This info message uses fruit emojis")
 ```
 
-### Customizing Colors and Formatting
+## Documentation
 
-The logger supports customization of colors and formatting. You can adjust color schemes or extend the formatter to better suit your needs by modifying the color dictionaries or overriding the `BulletTrainFormatter` methods.
+The documentation site is built with MkDocs Material.
 
-```python
-from logging_bullet_train import set_logger, wrap_text, Fore, Back
+Serve it locally:
 
-# Set up a custom logger
-custom_logger = set_logger("custom_logger", level=logging.DEBUG)
-
-# Use custom color styling in your messages if needed
-message = wrap_text("Custom styled message", fg=Fore.CYAN, bg=Back.BLACK)
-custom_logger.info(message)
+```bash
+poetry run mkdocs serve
 ```
+
+Build it strictly:
+
+```bash
+poetry run mkdocs build --strict
+```
+
+GitHub Actions builds and deploys GitHub Pages when `main` is pushed.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+MIT. See [LICENSE](LICENSE).

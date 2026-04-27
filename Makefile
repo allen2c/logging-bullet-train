@@ -1,23 +1,7 @@
 # Development
 format-all:
-	@isort . \
-		--skip setup.py \
-		--skip .venv \
-		--skip build \
-		--skip dist \
-		--skip __pycache__ \
-		--skip docs \
-		--skip static \
-		--skip .conda
-	@black . \
-		--exclude setup.py \
-		--exclude .venv \
-		--exclude build \
-		--exclude dist \
-		--exclude __pycache__ \
-		--exclude docs \
-		--exclude static \
-		--exclude .conda
+	@poetry run isort logging_bullet_train tests
+	@poetry run black logging_bullet_train tests
 
 install-all:
 	poetry install -E all --with dev
@@ -27,17 +11,10 @@ update-all:
 	poetry export --without-hashes -f requirements.txt --output requirements.txt
 	poetry export --without-hashes -E all --with dev -f requirements.txt --output requirements-all.txt
 
-# Services
-run-svc:
-	fastapi run functic/app.py
-
-run-svc-dev:
-	fastapi dev functic/app.py
-
 # Docs
 mkdocs:
-	mkdocs serve
+	poetry run mkdocs serve
 
 # Tests
 pytest:
-	python -m pytest --cov=languru --cov-config=.coveragerc --cov-report=xml:coverage.xml
+	poetry run pytest --cov=logging_bullet_train --cov-report=term-missing
